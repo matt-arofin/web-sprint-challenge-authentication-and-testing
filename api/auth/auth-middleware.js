@@ -6,7 +6,7 @@ const db = require('../../data/dbConfig')
 // check that user in req.body is properly formatted
 function checkUserIsValid(req, res, next){
     const {username, password} = req.body
-    if(!username.trim() || !password){
+    if(typeof username != 'string' || username.trim() === '' || typeof password != 'string' || !password){
         next({status: 401, message: "username and password required"})
     }
 

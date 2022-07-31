@@ -57,7 +57,7 @@ router.post('/login', checkUserIsValid, async (req, res, next) => {
 
     if(user && bcrypt.compareSync(password, user.password)){
       const token = generateJwt(user);
-      req.token = token
+      req.headers.authorization = token
       res.status(200).json({
         message: `welcome, ${user.username}`,
         token
