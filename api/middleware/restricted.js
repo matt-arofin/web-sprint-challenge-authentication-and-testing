@@ -1,10 +1,16 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../../config/index')
 
+// Use session or headers for token storage?
+
 module.exports = (req, res, next) => {
-  jwt.verify(req.headers.authorization, JWT_SECRET, (err, decodedToken) => {
+  if(!req.token) {
+    next({status: 401, message: "token required"})
+  }
+
+  jwt.verify(req.token, JWT_SECRET, (err, decodedToken) => {
     if(err) {
-      res.status(401).json({message: "token required"});
+      res.status(401).json({message: "token invalid"});
       return;
     }
 
