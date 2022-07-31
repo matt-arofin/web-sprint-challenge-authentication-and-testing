@@ -50,8 +50,28 @@ router.post('/register', checkUserIsValid, checkUsernameFree, async (req, res, n
   */
 });
 
-router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+router.post('/login', checkUserIsValid, async (req, res, next) => {
+  const { username, password } = req.user;
+  try {
+    const [user] = await db('users').where({username});
+
+    if(user && bcrypt.compareSync(password, user.password)){
+      const token = generateJwt(user);
+      console.log({
+        message: `welcome, ${user.username}`,
+        token
+      })
+      res.status(200).json({
+        message: `welcome, ${user.username}`,
+        token
+      })
+    } else {
+      next({status: 401, message: "invalid credentials"})
+    }
+
+  } catch(err) {
+    next(err)
+  }
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -78,11 +98,12 @@ router.post('/login', (req, res) => {
 });
 
 // create jwt token here
-// function generateJwt(user){
-//   const payload = {
-//     subject: ,
-//     username: 
-//   }
-// }
+function generateJwt(user){
+  const payload = {
+    subject: user.id,
+    username: user.username
+  }
+  return jwt.sign(payload, JWT_SECRET, {expiresIn: '1d'});
+}
 
 module.exports = router;
