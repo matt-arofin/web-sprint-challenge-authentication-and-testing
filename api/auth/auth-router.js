@@ -1,7 +1,28 @@
 const router = require('express').Router();
 
-router.post('/register', (req, res) => {
-  res.end('implement register, please!');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { checkUserIsValid, checkUsernameFree } = require('./auth-middleware')
+
+const db = require('../../data/dbConfig') // <---- use database methods directly here?
+const { BCRYPT_ROUNDS, JWT_SECRET } = require('../../config')
+
+
+router.post('/register', checkUserIsValid, checkUsernameFree, async (req, res, next) => {
+  // res.end('implement register, please!');
+  const { username, password } = req.user;
+  
+  const hash = bcrypt.hashSync(password, BCRYPT_ROUNDS)
+  
+  try {
+    const [newUserId] = await db('users').insert({username, password: hash}) // returns a new id?
+    // console.log(newUserId)
+    // console.log(db('users').where('id', newUserId).first())
+    const newUser = await db('users').where('id', newUserId).first()
+    res.status(201).json(newUser)
+  } catch(err) {
+    next(err)
+  }
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -55,5 +76,13 @@ router.post('/login', (req, res) => {
       the response body should include a string exactly as follows: "invalid credentials".
   */
 });
+
+// create jwt token here
+// function generateJwt(user){
+//   const payload = {
+//     subject: ,
+//     username: 
+//   }
+// }
 
 module.exports = router;
