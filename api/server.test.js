@@ -28,6 +28,7 @@ describe('[POST] register endpoint tests', () => {
   test('[1] can successfully register new users', async () => {
     const res = await request(server).post('/api/auth/register').send(dummyUser)
     expect(res.body).toMatchObject({username: dummyUser.username})
+    expect(res.status).toEqual(201)
     expect(bcrypt.compareSync(dummyUser.password, '$2b$08$ACxvXW3gsMcM.i45uI.JLeuxvMXCFONyVi9w1orepxWpiUayZA/QW')).toBe(true)
   }, 750)
 
@@ -65,19 +66,34 @@ describe('[GET] jokes endpoint', () => {
   test('[5] gets all jokes when user is logged in', async () => {
     await request(server).post('/api/auth/register').send(dummyUser)
     await request(server).post('/api/auth/login').send(dummyUser)
-      .then(async () => {
-        const jokes = await request(server).get('/api/jokes')
+      .then(async (res) => {
+        const jokes = await request(server).get('/api/jokes').set({Authorization: res.body.token})
+        console.log(jokes)
         expect(jokes).not.toBeNull();
+        expect(jokes).toBeNull()
     })
   }, 750)
 
+  // test('dummy', async () => {
+  //   await request(server).post('/api/auth/register').send(dummyUser)
+  //   await request(server).post('/api/auth/login').send(dummyUser)
+  //     .then(async (res) => {
+  //       const jokes = await request(server).get('/api/jokes').set({Authorisation: `${res.token}`})
+  //       console.log(jokes)
+  //       expect(jokes.text).toBeNull()
+  //   })
+  // }, 750)
+
   test('[6] returns an error message if user is not logged in', async () => {
     const jokesError = await request(server).get('/api/jokes');
-    expect(jokesError).toMatchObject({message: 'token required'})
+    expect(jokesError.text).toContain('token required')
+    expect(jokesError.status).toEqual(401)
   }, 750)
 
-  test('[7] returns an error message on invalid/expired token', async () => {
-    const invalidError = await request(server).get('/api/jokes').send({authorization: '7fwuihuif2498rhufir3h89hd28785'});
-    expect(invalidError).toMatchObject({message: 'token required'})
-  }, 750)
+  // test('[7] returns an error message on invalid/expired token', async () => {
+  //   const invalidError = await request(server).get('/api/jokes').send({authorization: '7fwuihuif2498rhufir3h89hd28785'});
+  //   expect(invalidError).toMatchObject({message: 'token required'})
+  // }, 750)
 })
+
+// eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJqZWN0IjoxLCJ1c2VybmFtZSI6IlBsYWNlaG9sZGVyIiwiaWF0IjoxNjU5NDAyNzA4LCJleHAiOjE2NTk0ODkxMDh9.1BfohqyVGt0WG4xLKbT4-QptNiyF3mwijVvQ-MpOBc8
