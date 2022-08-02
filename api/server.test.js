@@ -58,7 +58,8 @@ describe('[POST] login endpoint tests', () => {
     const badUsername = await request(server).post('/api/auth/login').send({username: 'Fake User', password:'Password'})
     expect(badUsername.body).toMatchObject({message: 'invalid credentials'})
 
-    // const badPassword = await request(server).post({username: '', password:''})
+    const badPassword = await request(server).post('/api/auth/login').send({username: 'New User', password:'passw0rd'})
+    expect(badPassword.body).toMatchObject({message: 'invalid credentials'})
   }, 750)
 })
 
@@ -68,9 +69,9 @@ describe('[GET] jokes endpoint', () => {
     await request(server).post('/api/auth/login').send(dummyUser)
       .then(async (res) => {
         const jokes = await request(server).get('/api/jokes').set({Authorization: res.body.token})
-        console.log(jokes)
-        expect(jokes).not.toBeNull();
-        expect(jokes).toBeNull()
+        // console.log(jokes)
+        expect(jokes.body).not.toBeNull();
+        expect(jokes.body).toHaveLength(3)
     })
   }, 750)
 
@@ -86,7 +87,7 @@ describe('[GET] jokes endpoint', () => {
 
   test('[6] returns an error message if user is not logged in', async () => {
     const jokesError = await request(server).get('/api/jokes');
-    expect(jokesError.text).toContain('token required')
+    expect(jokesError.body).toMatchObject({message: 'token required'})
     expect(jokesError.status).toEqual(401)
   }, 750)
 
